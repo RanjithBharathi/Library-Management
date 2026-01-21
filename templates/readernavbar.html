@@ -1,27 +1,38 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#"></a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-  
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="{{ url_for('readerbookview') }}">Books<span class="sr-only"></span></a>         
-        </li>
-        <li class="nav-item active">
-            <a class="nav-link" href="{{ url_for('myborrows') }}">My Borrow History<span class="sr-only"></span></a>         
-          </li>                       
-
-        <li class="nav-item active">
-            <a class="nav-link" href="{{ url_for('logout') }}">Logout<span class="sr-only"></span></a>         
-          </li> 
-      </ul>    
-      <form method="POST" action="{{url_for('readerbooksearch')}}" class="form-inline my-2 my-lg-0">
-        {{ form.hidden_tag() }}
-        <input class="form-control mr-sm-2" type="search" placeholder="Enter Book Title" aria-label="Search",   name="searched">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search Book</button>
-      </form>
-    </ul>  
+<nav class="navbar navbar-expand-lg navbar-library">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('readerbookview') }}">
+            <i class="fas fa-book-reader me-2"></i> Library Reader
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('readerbookview') }}">
+                        <i class="fas fa-book me-2"></i> Books
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('myborrows') }}">
+                        <i class="fas fa-history me-2"></i> My Borrow History
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </li>
+            </ul>
+            
+            <form method="POST" action="{{ url_for('readerbooksearch') }}" class="d-flex">
+                {{ form.hidden_tag() }}
+                <input class="form-control me-2" type="search" placeholder="Search books..." aria-label="Search" name="searched">
+                <button class="btn btn-library-outline" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
     </div>
-  </nav>
+</nav>

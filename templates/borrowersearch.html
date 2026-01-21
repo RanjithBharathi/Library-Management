@@ -1,25 +1,37 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
-<br>
-<h2>You Searched For...</h2>
-<p>{{ searched }}</p>
-<br>
-
-{% for borrower in borrowers %}
-<div class="shadow w-25 p-3 mb-5 bg-white rounded">
-ID:{{ borrower.id }}<br>
-First Name:{{ borrower.first_name }}<br>
-Last Name:{{ borrower.last_name }}<br>
-Email:{{ borrower.email }}<br>
-No. of Late Returns:{{ borrower.late_returns }}
+<div class="page-header">
+    <h1><i class="fas fa-search me-2"></i> Reader Search Results</h1>
+    <p class="text-muted">You searched for: <strong>{{ searched }}</strong></p>
 </div>
 
-{% endfor %}
-
-
-    
+<div class="row">
+    {% for borrower in borrowers %}
+    <div class="col-md-4 mb-4">
+        <div class="card-library">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-user me-2"></i> {{ borrower.first_name }} {{ borrower.last_name }}
+                </h5>
+                <p class="mb-1"><i class="fas fa-hashtag me-2"></i> ID: {{ borrower.id }}</p>
+                <p class="mb-1"><i class="fas fa-envelope me-2"></i> {{ borrower.email }}</p>
+                <p class="mb-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Late Returns: 
+                    {% if borrower.late_returns > 0 %}
+                        <span class="badge-library badge-warning">{{ borrower.late_returns }}</span>
+                    {% else %}
+                        <span class="badge-library badge-success">{{ borrower.late_returns }}</span>
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('borrowerlook', id=borrower.id) }}" class="btn btn-library-sm">
+                    <i class="fas fa-eye me-1"></i> View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
   
 

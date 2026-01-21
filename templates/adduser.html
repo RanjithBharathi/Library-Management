@@ -1,25 +1,47 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-user-plus me-2"></i> Add New Librarian</h1>
+    <p class="text-muted">Create a new librarian account</p>
+</div>
 
-    <h1>Enter the stuff here</h1> 
-    <br>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-
-        {{ form.name.label }}
-        {{ form.name() }}
-        <br/>
-        {{ form.email.label }}
-        {{ form.email() }}
-        <br>
-        {{ form.password_hash.label }}
-        {{ form.password_hash() }}
-        <br/>
-        {{ form.submit() }}
-        
-  
-    </form>
-
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card-library">
+            <div class="card-body p-4">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            {{ form.name(class="form-control form-control-library") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            {{ form.email(class="form-control form-control-library") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.password_hash.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            {{ form.password_hash(class="form-control form-control-library") }}
+                        </div>
+                    </div>
+                    
+                    {{ form.submit(class="btn btn-library") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 

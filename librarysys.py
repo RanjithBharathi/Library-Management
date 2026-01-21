@@ -6,6 +6,7 @@ from datetime import date
 from datetime import timedelta
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user 
 from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
 from webforms import BorrowForm, BorrowerForm, SearchForm, BookForm, UserForm, LoginForm, EditBorrowerForm
 from flask_migrate import Migrate
 import uuid as uuid
@@ -14,7 +15,7 @@ from sqlalchemy import ForeignKey
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:dangerzone@localhost/library' #Configuration for connecting to database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:1234567890@localhost/library' #Configuration for connecting to database
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app) #Creates instance of SQLAlchemy
 migrate = Migrate(app, db)
@@ -29,6 +30,29 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):  
     return Users.query.get(int(user_id)) or Reader.query.get(int(user_id))
+
+
+def verify_password_hash(stored_hash, password):
+    """Verify password against stored hash with fallback for legacy 'sha256' format.
+
+    Tries Werkzeug's `check_password_hash` first. If it raises a ValueError due to
+    an unsupported method (for example legacy 'sha256$salt$hash'), this will
+    attempt to verify the legacy format by computing sha256(salt + password).
+    """
+    try:
+        return check_password_hash(stored_hash, password)
+    except ValueError as e:
+        # Fallback for legacy format like 'sha256$salt$hexdigest'
+        try:
+            parts = stored_hash.split('$')
+            if len(parts) == 3 and parts[0] == 'sha256':
+                _, salt, hashval = parts
+                computed = hashlib.sha256((salt + password).encode()).hexdigest()
+                return computed == hashval
+        except Exception:
+            pass
+        # re-raise original error if we cannot handle it
+        raise
 
 
 #Searching
@@ -47,7 +71,7 @@ class Reader (db.Model, UserMixin):
     email = db.Column(db.String(120), nullable=False)
     late_returns = db.Column(db.Integer, nullable = False, default=0)
     superuser = db.Column(db.Boolean, nullable=False, default=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     #Backref
     borrow = db.relationship('Borrow', backref='borrower')
 
@@ -69,7 +93,7 @@ class  Users(db.Model, UserMixin):
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     superuser = db.Column(db.Boolean, nullable=False, default=True)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
 
     @property
     def password(self):
@@ -80,7 +104,7 @@ class  Users(db.Model, UserMixin):
         self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return verify_password_hash(self.password_hash, password)
 
 
 #Borrow Model
@@ -107,7 +131,7 @@ def readerlogin():
         reader = Reader.query.filter_by(email=form.email.data).first()
         if reader:
             #check hash
-            if check_password_hash(reader.password_hash, form.password.data):
+            if verify_password_hash(reader.password_hash, form.password.data):
                 login_user(reader)
                 return redirect(url_for('readerbookview'))
             else:
@@ -126,7 +150,7 @@ def borroweradd():
         reader = Reader.query.filter_by(email=form.email.data).first()
         if reader is None:
             if form.password_hash.data == form.verify_password_hash.data:
-                hashed_pw = generate_password_hash(form.password_hash.data, "sha256")
+                hashed_pw = generate_password_hash(form.password_hash.data)
                 reader = Reader(first_name=form.first_name.data, last_name=form.last_name.data, email=form.email.data,password_hash=hashed_pw)
             
                 form.first_name.data = ''
@@ -158,7 +182,7 @@ def login():
         user = Users.query.filter_by(email=form.email.data).first()
         if user:
             #check hash
-            if check_password_hash(user.password_hash, form.password.data):
+            if verify_password_hash(user.password_hash, form.password.data):
                 login_user(user)
                 return redirect(url_for('bookview'))
             else:
@@ -177,7 +201,7 @@ def add_user():
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
         if user is None:
-            hashed_pw = generate_password_hash(form.password_hash.data, "sha256")
+            hashed_pw = generate_password_hash(form.password_hash.data)
             user = Users(email=form.email.data, name=form.name.data, password_hash=hashed_pw)
             db.session.add(user)
             db.session.commit()

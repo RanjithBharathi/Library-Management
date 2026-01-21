@@ -1,20 +1,28 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
-<br>
-<h2>You Searched For...</h2>
-<p>{{ searched }}</p>
-<br>
+<div class="page-header">
+    <h1><i class="fas fa-search me-2"></i> Search Results</h1>
+    <p class="text-muted">You searched for: <strong>{{ searched }}</strong></p>
+</div>
 
-{% for book in books %}
-<div class="shadow w-25 p-3 mb-5 bg-white rounded">
-<a href="{{ url_for('viewbook', id=book.id) }}">{{book.title}}</a></div>
-
-{% endfor %}
-
-
-    
+<div class="row">
+    {% for book in books %}
+    <div class="col-md-4 mb-4">
+        <div class="card-library">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-book me-2"></i> {{ book.title }}
+                </h5>
+                <p class="text-muted mb-2"><i class="fas fa-user-pen me-2"></i> {{ book.author }}</p>
+                <a href="{{ url_for('viewbook', id=book.id) }}" class="btn btn-library-sm">
+                    <i class="fas fa-eye me-1"></i> View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
   
 
