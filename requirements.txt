@@ -1,0 +1,9 @@
+Flask
+Flask-Login
+Flask-WTF
+WTForms
+Flask-SQLAlchemy
+Flask-Migrate
+mysqlclient
+Werkzeug
+email_validator
