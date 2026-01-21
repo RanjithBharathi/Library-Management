@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+{% for message in get_flashed_messages() %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert"> 
+  {{ message }}      
+  <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+{% endfor %}
+
+<h1>Enter the borrow information here</h1> 
+    <br>
+    <div class="shadow w-25 p-3 mb-5 bg-white rounded mx-auto">
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        {{ form.book_id.label(class="form-label") }}
+        {{ form.book_id(class="form-control") }}    
+        <br/>
+        {{ form.borrower_id.label(class="form-label") }}
+        {{ form.borrower_id(class="form-control")}}
+        <br/>
+        {{ form.submit(class="btn btn-primary") }} 
+    </div>
+{% endblock %}
+  
+
+
