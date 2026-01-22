@@ -70,7 +70,7 @@ body:has(.login-container) {
     border: 2px solid var(--white);
     min-width: 250px;
     /* padding: 10px 15px; */
-    height: 60px;}
+    height: 30px;}
 
 .navbar-brand {
     font-size: 1.5rem;
@@ -96,7 +96,9 @@ body:has(.login-container) {
 
 .btn-search {
     background: var(--secondary-color);
+    height: 40px;
     border: none;
+    border-radius: 5px;
     color: var(--white);
     transition: all 0.3s ease;
 }
@@ -190,12 +192,6 @@ body:has(.login-container) {
     margin: 0.5rem 0;
 }
 
-.btn-library-outline:hover {
-    background: var(--secondary-color);
-    color: var(--white);
-    transform: translateY(-3px);
-}
-
 .btn-library-sm {
     background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
     border: none;
@@ -220,9 +216,6 @@ body:has(.login-container) {
     background: linear-gradient(135deg, var(--accent-color), #c0392b) !important;
 }
 
-.btn-danger:hover {
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4) !important;
-}
 
 /* Content Container */
 .container {
@@ -261,11 +254,6 @@ body:has(.login-container) {
     box-shadow: var(--shadow);
     transition: all 0.3s ease;
     margin-bottom: 1.5rem;
-}
-
-.card-library:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-hover);
 }
 
 .card-library .card-header {

@@ -26,7 +26,7 @@
                 </li>
             </ul>
             
-            <form method="POST" action="{{ url_for('readerbooksearch') }}" class="d-flex">
+            <form method="POST" action="{{ url_for('readerbooksearch') }}" class="d-flex align-items-center">
                 {{ form.hidden_tag() }}
                 <input class="form-control me-2" type="search" placeholder="Search books..." aria-label="Search" name="searched" required>
                 <button class="btn btn-library-outline" type="submit">

@@ -41,11 +41,11 @@
           </li>
         </ul>
         
-        <form method="POST" action="{{url_for('booksearch')}}" class="d-flex">
+        <form method="POST" action="{{url_for('booksearch')}}" class="d-flex align-items-center">
           {{ form.hidden_tag() }}
-          <input class="form-control me-2 form-control-library" type="search" placeholder="Search book title..." aria-label="Search" name="searched" required>
+          <input class="form-control me-2 form-control-library" type="search" placeholder="Search book title..." aria-label="Search" name="searched" required style="height: 30px;"> 
           <button class="btn btn-search" type="submit">
-            <i class="fas fa-search"></i> Search
+            <i class="fas fa-search"></i>
           </button>
         </form>
         
