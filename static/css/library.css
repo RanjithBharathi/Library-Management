@@ -110,9 +110,10 @@ body:has(.login-container) {
 
 /* Login Page Styling */
 .login-container {
-    height: 100vh;
+    height: auto;
     display: flex;
     align-items: center;
+    overflow-y: clip;
     justify-content: center;
     padding: 1rem;
     overflow: hidden;
