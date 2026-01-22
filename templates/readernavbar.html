@@ -28,9 +28,9 @@
             
             <form method="POST" action="{{ url_for('readerbooksearch') }}" class="d-flex">
                 {{ form.hidden_tag() }}
-                <input class="form-control me-2" type="search" placeholder="Search books..." aria-label="Search" name="searched">
+                <input class="form-control me-2" type="search" placeholder="Search books..." aria-label="Search" name="searched" required>
                 <button class="btn btn-library-outline" type="submit">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-search "></i>
                 </button>
             </form>
         </div>

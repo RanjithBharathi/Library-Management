@@ -54,6 +54,24 @@ body:has(.login-container) {
     opacity: 0.8;
 }
 
+.navbar-library .btn-library-outline {
+    border-color: var(--white);
+    color: var(--white);
+    background: transparent;
+}
+
+.navbar-library .btn-library-outline:hover {
+    background: var(--white);
+    color: var(--primary-color);
+    border-color: var(--white);
+}
+
+.navbar-library .form-control {
+    border: 2px solid var(--white);
+    min-width: 250px;
+    /* padding: 10px 15px; */
+    height: 60px;}
+
 .navbar-brand {
     font-size: 1.5rem;
     font-weight: bold;
@@ -90,20 +108,23 @@ body:has(.login-container) {
 
 /* Login Page Styling */
 .login-container {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 1rem;
+    overflow: hidden;
 }
 
 .login-card {
     background: var(--white);
     border-radius: 20px;
     box-shadow: var(--shadow-hover);
-    padding: 3rem;
+    padding: 2rem 3rem;
     max-width: 450px;
     width: 100%;
+    
+    
     animation: slideUp 0.5s ease;
 }
 

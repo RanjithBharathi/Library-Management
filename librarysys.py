@@ -139,7 +139,7 @@ def readerlogin():
         else:
             flash("USER DOES NOT EXIST")
 
-    return render_template('librarianlogin.html', form=form)
+    return render_template('readerlogin.html', form=form)
 
 
 #Reader registeration
