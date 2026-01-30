@@ -1,0 +1,62 @@
+{% extends 'readerbase.html' %} {% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+      <i class="fas fa-lightbulb me-2 text-warning"></i>My Book Suggestions
+    </h2>
+    <a href="{{ url_for('suggest_book') }}" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>New Suggestion
+    </a>
+  </div>
+
+  {% if suggestions %}
+  <div class="row">
+    {% for suggestion in suggestions %}
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div
+          class="card-header bg-light d-flex justify-content-between align-items-center"
+        >
+          <h6 class="mb-0">{{ suggestion.suggested_title }}</h6>
+          {% if suggestion.status == 'pending' %}
+          <span class="badge bg-warning text-dark"
+            ><i class="fas fa-clock me-1"></i>Pending</span
+          >
+          {% elif suggestion.status == 'approved' %}
+          <span class="badge bg-success"
+            ><i class="fas fa-check me-1"></i>Approved</span
+          >
+          {% else %}
+          <span class="badge bg-danger"
+            ><i class="fas fa-times me-1"></i>Rejected</span
+          >
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-2">
+            <strong>Author:</strong> {{ suggestion.suggested_author }}
+          </p>
+          <p class="mb-2"><strong>Your reason:</strong></p>
+          <p class="text-muted">{{ suggestion.reason }}</p>
+        </div>
+        <div class="card-footer text-muted">
+          <small>Submitted on {{ suggestion.date_suggested }}</small>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="fas fa-lightbulb fa-4x text-muted mb-3"></i>
+      <h5>No Suggestions Yet</h5>
+      <p class="text-muted">You haven't suggested any books yet.</p>
+      <a href="{{ url_for('suggest_book') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Suggest a Book
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError, EmailField, IntegerField
-from wtforms.validators import DataRequired, NumberRange, Email, Optional
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError, EmailField, IntegerField, TextAreaField, SelectField, HiddenField
+from wtforms.validators import DataRequired, NumberRange, Email, Optional, Length
 from wtforms.widgets import TextArea
 
 #Form for adding new borrow
@@ -57,3 +57,27 @@ class LoginChoiceForm(FlaskForm):
     librarian_login = SubmitField("Librarian Login")
     borrower_login = SubmitField("Reader Login") 
 
+# ============== NEW FORMS FOR ADDITIONAL FEATURES ==============
+
+#Form for Book Rating and Review
+class RatingForm(FlaskForm):
+    rating = SelectField("Rating", choices=[('5', '⭐⭐⭐⭐⭐ Excellent'), ('4', '⭐⭐⭐⭐ Very Good'), ('3', '⭐⭐⭐ Good'), ('2', '⭐⭐ Fair'), ('1', '⭐ Poor')], validators=[DataRequired()])
+    review = TextAreaField("Your Review", validators=[DataRequired(), Length(min=10, max=500)])
+    submit = SubmitField("Submit Review")
+
+#Form for Book Suggestion
+class SuggestionForm(FlaskForm):
+    suggested_title = StringField("Book Title", validators=[DataRequired(), Length(max=255)])
+    suggested_author = StringField("Author Name", validators=[DataRequired(), Length(max=255)])
+    reason = TextAreaField("Why should we add this book?", validators=[DataRequired(), Length(min=20, max=500)])
+    submit = SubmitField("Submit Suggestion")
+
+#Form for Fine Payment
+class FinePaymentForm(FlaskForm):
+    amount = HiddenField("Amount")
+    submit = SubmitField("Mark as Paid")
+
+#Form for Chatbot
+class ChatForm(FlaskForm):
+    message = StringField("Message", validators=[DataRequired(), Length(max=500)])
+    submit = SubmitField("Send")

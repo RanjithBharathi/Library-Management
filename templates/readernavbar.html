@@ -1,38 +1,72 @@
 <nav class="navbar navbar-expand-lg navbar-library">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('readerbookview') }}">
-            <i class="fas fa-book-reader me-2"></i> Library Reader
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('readerbookview') }}">
+      <i class="fas fa-book-reader me-2"></i> Library Reader
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('readerbookview') }}">
+            <i class="fas fa-book me-2"></i> Books
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('myborrows') }}">
+            <i class="fas fa-history me-2"></i> My Borrows
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('my_fines') }}">
+            <i class="fas fa-dollar-sign me-2"></i> My Fines
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('suggest_book') }}">
+            <i class="fas fa-lightbulb me-2"></i> Suggest Book
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('reader_chatbot') }}">
+            <i class="fas fa-robot me-2"></i> Help
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt me-2"></i> Logout
+          </a>
+        </li>
+      </ul>
+
+      <form
+        method="POST"
+        action="{{ url_for('readerbooksearch') }}"
+        class="d-flex align-items-center"
+      >
+        {{ form.hidden_tag() }}
+        <input
+          class="form-control me-2"
+          type="search"
+          placeholder="Search books..."
+          aria-label="Search"
+          name="searched"
+          required
+        />
+        <button class="btn btn-library-outline" type="submit">
+          <i class="fas fa-search"></i>
         </button>
-        
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('readerbookview') }}">
-                        <i class="fas fa-book me-2"></i> Books
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('myborrows') }}">
-                        <i class="fas fa-history me-2"></i> My Borrow History
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">
-                        <i class="fas fa-sign-out-alt me-2"></i> Logout
-                    </a>
-                </li>
-            </ul>
-            
-            <form method="POST" action="{{ url_for('readerbooksearch') }}" class="d-flex align-items-center">
-                {{ form.hidden_tag() }}
-                <input class="form-control me-2" type="search" placeholder="Search books..." aria-label="Search" name="searched" required>
-                <button class="btn btn-library-outline" type="submit">
-                    <i class="fas fa-search "></i>
-                </button>
-            </form>
-        </div>
+      </form>
     </div>
+  </div>
 </nav>

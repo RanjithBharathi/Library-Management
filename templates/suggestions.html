@@ -1,0 +1,164 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">
+    <i class="fas fa-lightbulb me-2 text-warning"></i>Book Suggestions from
+    Readers
+  </h2>
+
+  <!-- Filter Tabs -->
+  <ul class="nav nav-tabs mb-4" id="suggestionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" data-filter="all">
+        All <span class="badge bg-secondary">{{ suggestions|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-filter="pending">
+        Pending
+        <span class="badge bg-warning text-dark"
+          >{{ suggestions|selectattr('status', 'equalto', 'pending')|list|length
+          }}</span
+        >
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-filter="approved">
+        Approved
+        <span class="badge bg-success"
+          >{{ suggestions|selectattr('status', 'equalto',
+          'approved')|list|length }}</span
+        >
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-filter="rejected">
+        Rejected
+        <span class="badge bg-danger"
+          >{{ suggestions|selectattr('status', 'equalto',
+          'rejected')|list|length }}</span
+        >
+      </button>
+    </li>
+  </ul>
+
+  {% if suggestions %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Book Title</th>
+          <th>Author</th>
+          <th>Suggested By</th>
+          <th>Reason</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for suggestion in suggestions %}
+        <tr data-status="{{ suggestion.status }}">
+          <td>{{ suggestion.id }}</td>
+          <td><strong>{{ suggestion.suggested_title }}</strong></td>
+          <td>{{ suggestion.suggested_author }}</td>
+          <td>
+            <a href="{{ url_for('borrowerlook', id=suggestion.reader.id) }}">
+              {{ suggestion.reader.first_name }} {{ suggestion.reader.last_name
+              }}
+            </a>
+          </td>
+          <td>
+            <span title="{{ suggestion.reason }}">
+              {{ suggestion.reason[:50] }}{% if suggestion.reason|length > 50
+              %}...{% endif %}
+            </span>
+          </td>
+          <td>{{ suggestion.date_suggested }}</td>
+          <td>
+            {% if suggestion.status == 'pending' %}
+            <span class="badge bg-warning text-dark"
+              ><i class="fas fa-clock me-1"></i>Pending</span
+            >
+            {% elif suggestion.status == 'approved' %}
+            <span class="badge bg-success"
+              ><i class="fas fa-check me-1"></i>Approved</span
+            >
+            {% else %}
+            <span class="badge bg-danger"
+              ><i class="fas fa-times me-1"></i>Rejected</span
+            >
+            {% endif %}
+          </td>
+          <td>
+            {% if suggestion.status == 'pending' %}
+            <form
+              method="POST"
+              action="{{ url_for('approve_suggestion', id=suggestion.id) }}"
+              style="display: inline"
+            >
+              <button
+                type="submit"
+                class="btn btn-sm btn-success"
+                title="Approve"
+              >
+                <i class="fas fa-check"></i>
+              </button>
+            </form>
+            <form
+              method="POST"
+              action="{{ url_for('reject_suggestion', id=suggestion.id) }}"
+              style="display: inline"
+            >
+              <button
+                type="submit"
+                class="btn btn-sm btn-danger"
+                title="Reject"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </form>
+            {% else %}
+            <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+      <h5>No Suggestions</h5>
+      <p class="text-muted">No readers have submitted book suggestions yet.</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  // Filter functionality
+  document.querySelectorAll("[data-filter]").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const filter = this.dataset.filter;
+
+      // Update active tab
+      document
+        .querySelectorAll("[data-filter]")
+        .forEach((b) => b.classList.remove("active"));
+      this.classList.add("active");
+
+      // Filter rows
+      document.querySelectorAll("tbody tr").forEach((row) => {
+        if (filter === "all" || row.dataset.status === filter) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

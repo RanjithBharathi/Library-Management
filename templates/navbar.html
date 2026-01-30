@@ -1,61 +1,131 @@
 <nav class="navbar navbar-expand-lg navbar-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{{ url_for('bookview') }}">
-        <i class="fas fa-book-open"></i> Library System
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    
-      <div class="collapse navbar-collapse" id="navbarContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('bookview') }}">
-              <i class="fas fa-books"></i> Books
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('add_book') }}">
-              <i class="fas fa-plus-circle"></i> Add Book
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('readerview') }}">
-              <i class="fas fa-users"></i> Readers
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('borrowview') }}">
-              <i class="fas fa-exchange-alt"></i> Active Borrows
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('borrowhistory') }}">
-              <i class="fas fa-history"></i> History
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('borrowadd') }}">
-              <i class="fas fa-hand-holding-medical"></i> New Borrow
-            </a>
-          </li>
-        </ul>
-        
-        <form method="POST" action="{{url_for('booksearch')}}" class="d-flex align-items-center">
-          {{ form.hidden_tag() }}
-          <input class="form-control me-2 form-control-library" type="search" placeholder="Search book title..." aria-label="Search" name="searched" required style="height: 30px;"> 
-          <button class="btn btn-search" type="submit">
-            <i class="fas fa-search"></i>
-          </button>
-        </form>
-        
-        <ul class="navbar-nav ms-3">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('logout') }}">
-              <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-          </li>
-        </ul>
-      </div>
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+      <i class="fas fa-book-open"></i> Library System
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarContent"
+      aria-controls="navbarContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-chart-line"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('bookview') }}">
+            <i class="fas fa-book"></i> Books
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('add_book') }}">
+            <i class="fas fa-plus-circle"></i> Add Book
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('readerview') }}">
+            <i class="fas fa-users"></i> Readers
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+          >
+            <i class="fas fa-exchange-alt"></i> Borrows
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="{{ url_for('borrowview') }}"
+                ><i class="fas fa-hand-holding me-2"></i>Active Borrows</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="{{ url_for('borrowhistory') }}"
+                ><i class="fas fa-history me-2"></i>History</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="{{ url_for('borrowadd') }}"
+                ><i class="fas fa-plus me-2"></i>New Borrow</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item" href="{{ url_for('view_fines') }}"
+                ><i class="fas fa-dollar-sign me-2"></i>Manage Fines</a
+              >
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+          >
+            <i class="fas fa-comments"></i> Feedback
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="{{ url_for('view_suggestions') }}"
+                ><i class="fas fa-lightbulb me-2"></i>Book Suggestions</a
+              >
+            </li>
+            <li>
+              <a class="dropdown-item" href="{{ url_for('all_reviews') }}"
+                ><i class="fas fa-star me-2"></i>All Reviews</a
+              >
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('chatbot') }}">
+            <i class="fas fa-robot"></i> Chatbot
+          </a>
+        </li>
+      </ul>
+
+      <form
+        method="POST"
+        action="{{url_for('booksearch')}}"
+        class="d-flex align-items-center"
+      >
+        {{ form.hidden_tag() }}
+        <input
+          class="form-control me-2 form-control-library"
+          type="search"
+          placeholder="Search book title..."
+          aria-label="Search"
+          name="searched"
+          required
+          style="height: 30px"
+        />
+        <button class="btn btn-search" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+
+      <ul class="navbar-nav ms-3">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>

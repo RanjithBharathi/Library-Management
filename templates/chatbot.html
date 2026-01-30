@@ -1,0 +1,491 @@
+{% extends 'base.html' %} {% block content %}
+<div class="chatbot-fullscreen">
+  <div class="chat-wrapper">
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-robot fa-lg me-2"></i>
+        <div>
+          <h5 class="mb-0">Library Assistant</h5>
+          <small class="text-light opacity-75"
+            >Online • Connected to Library Database</small
+          >
+        </div>
+      </div>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+      </a>
+    </div>
+
+    <!-- Chat Messages Container -->
+    <div class="chat-messages" id="chat-container">
+      <div class="chat-message bot-message">
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble bot">
+            <strong>Hello! I'm your Library Assistant.</strong>
+            <br /><br />
+            I have access to the library database and can help you with:
+            <ul>
+              <li>📚 Check book availability</li>
+              <li>🔍 Find books by title or author</li>
+              <li>📊 View library statistics</li>
+              <li>💰 Explain fine policies</li>
+              <li>📖 Book recommendations</li>
+            </ul>
+            What would you like to know?
+          </div>
+          <span class="message-time">Just now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button
+        class="quick-btn"
+        onclick="sendQuickMessage('How many books are available?')"
+      >
+        📚 Available Books
+      </button>
+      <button
+        class="quick-btn"
+        onclick="sendQuickMessage('Show me popular books')"
+      >
+        🔥 Popular Books
+      </button>
+      <button
+        class="quick-btn"
+        onclick="sendQuickMessage('What are the library policies?')"
+      >
+        📋 Policies
+      </button>
+      <button
+        class="quick-btn"
+        onclick="sendQuickMessage('Are there any overdue books?')"
+      >
+        ⏰ Overdue Status
+      </button>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-container">
+      <form id="chat-form" class="chat-input-form">
+        <input
+          type="text"
+          id="user-message"
+          class="chat-input"
+          placeholder="Ask me anything about the library..."
+          autocomplete="off"
+        />
+        <button type="submit" class="send-btn" id="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Full screen chatbot layout */
+  .chatbot-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .chat-wrapper {
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Header */
+  .chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Messages Container - Scrollable */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8f9fa;
+    scroll-behavior: smooth;
+  }
+
+  /* Custom Scrollbar */
+  .chat-messages::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .chat-messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+
+  .chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+  }
+
+  /* Message Styles */
+  .chat-message {
+    display: flex;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .chat-message.user-message {
+    flex-direction: row-reverse;
+  }
+
+  .message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .bot-message .message-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-right: 10px;
+  }
+
+  .user-message .message-avatar {
+    background: #e9ecef;
+    color: #495057;
+    margin-left: 10px;
+  }
+
+  .message-content {
+    max-width: 75%;
+  }
+
+  .message-bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    line-height: 1.5;
+  }
+
+  .message-bubble.bot {
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .message-bubble.user {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+
+  .message-bubble ul {
+    margin: 10px 0 0 0;
+    padding-left: 20px;
+  }
+
+  .message-bubble li {
+    margin: 5px 0;
+  }
+
+  .message-time {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+    display: block;
+  }
+
+  .user-message .message-time {
+    text-align: right;
+  }
+
+  /* Quick Actions */
+  .quick-actions {
+    padding: 10px 20px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .quick-btn {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border: 1px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .quick-btn:hover {
+    background: #667eea;
+    color: white;
+  }
+
+  /* Input Container */
+  .chat-input-container {
+    padding: 15px 20px;
+    background: white;
+    border-top: 1px solid #eee;
+  }
+
+  .chat-input-form {
+    display: flex;
+    gap: 10px;
+  }
+
+  .chat-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 25px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input:focus {
+    border-color: #667eea;
+  }
+
+  .send-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  }
+
+  .send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Typing Indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #667eea;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: bounce 1.4s infinite ease-in-out;
+  }
+
+  .typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  .typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes bounce {
+    0%,
+    80%,
+    100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1);
+    }
+  }
+
+  /* Format bot responses */
+  .message-bubble.bot strong {
+    color: #667eea;
+  }
+</style>
+
+<script>
+  const chatContainer = document.getElementById("chat-container");
+  const chatForm = document.getElementById("chat-form");
+  const userInput = document.getElementById("user-message");
+  const sendBtn = document.getElementById("send-btn");
+
+  function formatBotMessage(text) {
+    // Convert markdown-style formatting to HTML
+    let formatted = text
+      // Bold text **text**
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      // Handle numbered lists (1. item)
+      .replace(/^\d+\.\s+(.*)$/gm, "<li>$1</li>")
+      // Handle bullet points
+      .replace(/^[•\-\*]\s+(.*)$/gm, "<li>$1</li>")
+      // Line breaks
+      .replace(/\n\n/g, "</p><p>")
+      .replace(/\n/g, "<br>");
+
+    // Wrap consecutive list items in ul tags
+    formatted = formatted.replace(
+      /(<li>.*?<\/li>)(\s*<br>)*(<li>.*?<\/li>)*/g,
+      function (match) {
+        return '<ul class="bot-list">' + match.replace(/<br>/g, "") + "</ul>";
+      }
+    );
+
+    return "<p>" + formatted + "</p>";
+  }
+
+  function getCurrentTime() {
+    return new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function addMessage(content, isUser) {
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `chat-message ${isUser ? "user-message" : "bot-message"}`;
+
+    const formattedContent = isUser ? content : formatBotMessage(content);
+
+    messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas fa-${isUser ? "user" : "robot"}"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-bubble ${isUser ? "user" : "bot"}">
+                    ${formattedContent}
+                </div>
+                <span class="message-time">${getCurrentTime()}</span>
+            </div>
+        `;
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function showTyping() {
+    const typingDiv = document.createElement("div");
+    typingDiv.id = "typing-indicator";
+    typingDiv.className = "chat-message bot-message";
+    typingDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+    chatContainer.appendChild(typingDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function hideTyping() {
+    const typing = document.getElementById("typing-indicator");
+    if (typing) typing.remove();
+  }
+
+  async function sendMessage(message) {
+    if (!message.trim()) return;
+
+    // Add user message
+    addMessage(message, true);
+    userInput.value = "";
+    sendBtn.disabled = true;
+
+    // Show typing indicator
+    showTyping();
+
+    try {
+      const response = await fetch("/chatbot/send", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: message})
+      });
+
+      const data = await response.json();
+      hideTyping();
+      addMessage(data.response, false);
+    } catch (error) {
+      hideTyping();
+      addMessage("Sorry, I encountered an error. Please try again.", false);
+    }
+
+    sendBtn.disabled = false;
+    userInput.focus();
+  }
+
+  function sendQuickMessage(message) {
+    sendMessage(message);
+  }
+
+  chatForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    sendMessage(userInput.value);
+  });
+
+  // Focus input on load
+  userInput.focus();
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'readerbase.html' %} {% block content %}
+<div class="container py-4">
+  <h2 class="mb-4"><i class="fas fa-receipt me-2"></i>My Fines</h2>
+
+  {% if total_owed > 0 %}
+  <div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Total Outstanding:</strong> ${{ "%.2f"|format(total_owed) }}
+    <br /><small>Please visit the library desk to pay your fines.</small>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Fine History</h5>
+    </div>
+    <div class="card-body">
+      {% if fines %}
+      <table class="table table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Book</th>
+            <th>Due Date</th>
+            <th>Fine Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fine in fines %}
+          <tr
+            class="{% if fine.fine_paid %}table-success{% else %}table-warning{% endif %}"
+          >
+            <td>{{ fine.book.title }}</td>
+            <td>{{ fine.return_date }}</td>
+            <td><strong>${{ "%.2f"|format(fine.fine_amount) }}</strong></td>
+            <td>
+              {% if fine.fine_paid %}
+              <span class="badge bg-success"
+                ><i class="fas fa-check"></i> Paid</span
+              >
+              {% else %}
+              <span class="badge bg-warning text-dark"
+                ><i class="fas fa-clock"></i> Pending</span
+              >
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fas fa-smile fa-4x text-success mb-3"></i>
+        <h4>No Fines!</h4>
+        <p class="text-muted">
+          You have no fines on your account. Keep up the good work!
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Fine Policy</h5>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>
+          <strong>Grace Period:</strong> 3 days after the due date (no fine)
+        </li>
+        <li><strong>Daily Fine:</strong> $1.00 per day after grace period</li>
+        <li><strong>Maximum Fine:</strong> $50.00 per book</li>
+        <li><strong>Payment:</strong> Visit the library desk to pay fines</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
