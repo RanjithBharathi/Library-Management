@@ -1,59 +1,82 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Librarian Login - Library System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/library.css') }}">
-</head>
-<body>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/library.css') }}"
+    />
+  </head>
+  <body>
     <div class="login-container">
-        <div class="login-card">
-            {% for message in get_flashed_messages() %}
-            <div class="alert alert-library alert-warning alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endfor %}
-            
-            <div class="login-header">
-                <i class="fas fa-user-tie login-icon"></i>
-                <h2>Librarian Login</h2>
-                <p>Enter your credentials to continue</p>
-            </div>
-            
-            <form method="POST">
-                {{ form.hidden_tag() }}
-                
-                <div class="mb-3">
-                    {{ form.email.label(class="form-label") }}
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        {{ form.email(class="form-control form-control-library") }}
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    {{ form.password.label(class="form-label") }}
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        {{ form.password(class="form-control form-control-library") }}
-                    </div>
-                </div>
-                
-                {{ form.submit(class="btn btn-library") }}
-            </form>
-            
-            <div class="text-center mt-3">
-                <a href="{{ url_for('loginchoice') }}" class="btn btn-library-outline">
-                    <i class="fas fa-arrow-left me-2"></i> Back
-                </a>
-            </div>
+      <div class="login-card">
+        {% for message in get_flashed_messages() %}
+        <div
+          class="alert alert-library alert-warning alert-dismissible fade show"
+          role="alert"
+        >
+          <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
         </div>
+        {% endfor %}
+
+        <div class="login-header">
+          <i class="fas fa-user-tie login-icon"></i>
+          <h2>Librarian Login</h2>
+          <p>Enter your credentials to continue</p>
+        </div>
+
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            <div class="input-group">
+              <span class="input-group-text"
+                ><i class="fas fa-envelope"></i
+              ></span>
+              {{ form.email(class="form-control form-control-library") }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              {{ form.password(class="form-control form-control-library") }}
+            </div>
+          </div>
+
+          {{ form.submit(class="btn btn-library") }}
+        </form>
+
+        <div class="text-center mt-3">
+          <a
+            href="{{ url_for('loginchoice') }}"
+            class="btn btn-library-outline"
+          >
+            <i class="fas fa-arrow-left me-2"></i> Back
+          </a>
+        </div>
+      </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+  </body>
 </html>

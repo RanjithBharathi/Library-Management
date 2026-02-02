@@ -72,11 +72,11 @@
             <i class="fas fa-robot me-1"></i> Help
           </a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link" href="{{ url_for('logout') }}">
             <i class="fas fa-sign-out-alt me-1"></i> Logout
           </a>
-        </li>
+        </li> -->
       </ul>
 
       <form
@@ -96,6 +96,14 @@
         <button class="btn btn-library-outline" type="submit">
           <i class="fas fa-search"></i>
         </button>
+
+        <ul class="navbar-nav nav-right">
+          <li class="nav-item ms-3">
+            <a class="nav-link" href="{{ url_for('logout') }}">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+          </li>
+        </ul>
       </form>
     </div>
   </div>

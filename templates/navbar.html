@@ -3,6 +3,7 @@
     <a class="navbar-brand" href="{{ url_for('dashboard') }}">
       <i class="fas fa-book-open"></i> Library System
     </a>
+
     <button
       class="navbar-toggler"
       type="button"
@@ -119,8 +120,8 @@
         </button>
       </form>
 
-      <ul class="navbar-nav ms-3">
-        <li class="nav-item">
+      <ul class="navbar-nav nav-right">
+        <li class="nav-item ms-3">
           <a class="nav-link" href="{{ url_for('logout') }}">
             <i class="fas fa-sign-out-alt"></i> Logout
           </a>
