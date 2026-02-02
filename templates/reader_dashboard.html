@@ -1,0 +1,284 @@
+{% extends 'readerbase.html' %} {% block content %}
+<div class="container py-4">
+  <!-- Welcome Header -->
+  <div class="mb-4">
+    <h2>
+      <i class="fas fa-user-circle me-2"></i>Welcome, {{ reader.first_name }}!
+    </h2>
+    <p class="text-muted">Your personal library dashboard</p>
+  </div>
+
+  <!-- Stats Cards Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card bg-primary text-white h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-book fa-2x mb-2"></i>
+          <h3>{{ total_borrowed }}</h3>
+          <p class="mb-0 small">Total Borrowed</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-info text-white h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-hand-holding fa-2x mb-2"></i>
+          <h3>{{ currently_borrowed }}</h3>
+          <p class="mb-0 small">Currently Borrowed</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-warning text-dark h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+          <h3>{{ overdue_books }}</h3>
+          <p class="mb-0 small">Overdue</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-danger text-white h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+          <h3>${{ "%.2f"|format(total_fines) }}</h3>
+          <p class="mb-0 small">Fines Owed</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card bg-success text-white h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-check-circle fa-2x mb-2"></i>
+          <h3>{{ returned_books }}</h3>
+          <p class="mb-0 small">Returned</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-secondary text-white h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-star fa-2x mb-2"></i>
+          <h3>{{ my_reviews_count }}</h3>
+          <p class="mb-0 small">My Reviews</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-light h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-lightbulb fa-2x mb-2 text-warning"></i>
+          <h3>{{ pending_suggestions }}</h3>
+          <p class="mb-0 small">Pending Suggestions</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card bg-light h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-check fa-2x mb-2 text-success"></i>
+          <h3>{{ approved_suggestions }}</h3>
+          <p class="mb-0 small">Approved Suggestions</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Recent Borrows -->
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>Recent Activity
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if recent_borrows %}
+          <ul class="list-group list-group-flush">
+            {% for borrow in recent_borrows %}
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <div>
+                <strong>{{ borrow.book.title }}</strong>
+                <br /><small class="text-muted">{{ borrow.borrow_date }}</small>
+              </div>
+              {% if borrow.returned %}
+              <span class="badge bg-success">Returned</span>
+              {% elif borrow.overdue %}
+              <span class="badge bg-danger">Overdue</span>
+              {% else %}
+              <span class="badge bg-info">Active</span>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          <a
+            href="{{ url_for('myborrows') }}"
+            class="btn btn-outline-primary btn-sm mt-3"
+            >View All</a
+          >
+          {% else %}
+          <p class="text-muted text-center py-3">No borrow history yet</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Rated Books -->
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0"><i class="fas fa-star me-2"></i>Top Rated Books</h5>
+        </div>
+        <div class="card-body">
+          {% if top_rated %}
+          <ul class="list-group list-group-flush">
+            {% for book in top_rated %}
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <div>
+                <a href="{{ url_for('reader_book_reviews', id=book.id) }}"
+                  >{{ book.title }}</a
+                >
+                <br /><small class="text-muted">by {{ book.author }}</small>
+              </div>
+              <div class="text-end">
+                {% for i in range(book.avg_rating|int) %}
+                <i class="fas fa-star text-warning"></i>
+                {% endfor %}
+                <br /><small>{{ book.review_count }} reviews</small>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          <a
+            href="{{ url_for('reader_all_reviews') }}"
+            class="btn btn-outline-warning btn-sm mt-3"
+            >All Reviews</a
+          >
+          {% else %}
+          <p class="text-muted text-center py-3">No ratings yet</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Available Books -->
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-book-open me-2"></i>Available to Borrow
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if available_books %}
+          <ul class="list-group list-group-flush">
+            {% for book in available_books %}
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <div>
+                <a href="{{ url_for('readerbook', id=book.id) }}"
+                  >{{ book.title }}</a
+                >
+                <br /><small class="text-muted">by {{ book.author }}</small>
+              </div>
+              <span class="badge bg-success">Available</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <a
+            href="{{ url_for('readerbookview') }}"
+            class="btn btn-outline-success btn-sm mt-3"
+            >Browse All</a
+          >
+          {% else %}
+          <p class="text-muted text-center py-3">No books available</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- My Reviews -->
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0"><i class="fas fa-pen me-2"></i>My Recent Reviews</h5>
+        </div>
+        <div class="card-body">
+          {% if my_reviewed_books %}
+          <ul class="list-group list-group-flush">
+            {% for review in my_reviewed_books %}
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between">
+                <strong>{{ review.book.title }}</strong>
+                <div>
+                  {% for i in range(review.rating) %}
+                  <i class="fas fa-star text-warning"></i>
+                  {% endfor %}
+                </div>
+              </div>
+              {% if review.review %}
+              <small class="text-muted"
+                >{{ review.review[:50] }}{% if review.review|length > 50 %}...{%
+                endif %}</small
+              >
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          <a
+            href="{{ url_for('my_reviews') }}"
+            class="btn btn-outline-info btn-sm mt-3"
+            >View All</a
+          >
+          {% else %}
+          <p class="text-muted text-center py-3">No reviews yet</p>
+          <a
+            href="{{ url_for('readerbookview') }}"
+            class="btn btn-primary btn-sm"
+            >Browse Books to Review</a
+          >
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+    </div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('readerbookview') }}" class="btn btn-primary">
+          <i class="fas fa-book me-1"></i> Browse Books
+        </a>
+        <a href="{{ url_for('myborrows') }}" class="btn btn-info">
+          <i class="fas fa-history me-1"></i> My Borrows
+        </a>
+        <a href="{{ url_for('my_fines') }}" class="btn btn-danger">
+          <i class="fas fa-dollar-sign me-1"></i> View Fines
+        </a>
+        <a href="{{ url_for('suggest_book') }}" class="btn btn-warning">
+          <i class="fas fa-lightbulb me-1"></i> Suggest Book
+        </a>
+        <a href="{{ url_for('reader_chatbot') }}" class="btn btn-secondary">
+          <i class="fas fa-robot me-1"></i> Ask Help
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

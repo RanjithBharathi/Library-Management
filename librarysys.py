@@ -1,6 +1,6 @@
 from enum import unique
 from pydoc import synopsis
-from flask import Flask, request, render_template, url_for, flash,redirect, url_for, flash, jsonify
+from flask import Flask, request, render_template, url_for, flash,redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 from datetime import timedelta
@@ -131,7 +131,7 @@ class Borrow (db.Model):
      book_id = db.Column(db.Integer, ForeignKey(Book.id))
      borrower_id = db.Column (db.Integer, ForeignKey(Reader.id))
      overdue = db.Column(db.Boolean, nullable = False, default=False)
-     return_date = db.Column(db.Date, nullable=False, default=date.today() + timedelta(days=20))
+     return_date = db.Column(db.Date, nullable=False, default=date.today() + timedelta(days=5))
      returned = db.Column(db.Boolean, nullable=True, default=False)
      fine_amount = db.Column(db.Float, nullable=False, default=0.0)  # NEW: Fine for this borrow
      fine_paid = db.Column(db.Boolean, nullable=False, default=False)  # NEW: Fine payment status
@@ -185,8 +185,8 @@ def get_book_average_rating(book_id):
     return sum(r.rating for r in ratings) / len(ratings)
 
 
-def get_chatbot_response(user_message, context=""):
-    """Get response from Groq LLM API with database context"""
+def get_chatbot_response(user_message, chat_history=None, context="", reader_context=""):
+    """Get response from Groq LLM API with database context and chat history"""
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
@@ -195,13 +195,21 @@ def get_chatbot_response(user_message, context=""):
     # Gather database context for the chatbot (READ-ONLY)
     db_context = get_library_context()
     
-    system_prompt = f"""You are a helpful library assistant chatbot with access to real library data.
+    system_prompt = f"""You are a helpful library assistant chatbot with access to ONLY this library's database.
+
+IMPORTANT RULES:
+• ONLY mention books that are listed in the database below
+• NEVER make up or suggest books that are NOT in the database
+• If asked for recommendations, ONLY suggest from the available books listed
+• If a book is not in our database, say "We don't have that book in our library"
+• Be accurate about availability - check the AVAILABLE BOOKS list
 
 LIBRARY DATABASE INFO:
 {db_context}
+{reader_context}
 
 LIBRARY POLICIES:
-• Borrowing period: 20 days
+• Borrowing period: 5 days (testing period)
 • Grace period: 3 days (no fine)
 • Fine rate: $1 per day after grace period
 • Maximum fine: $50 per book
@@ -213,20 +221,28 @@ RESPONSE FORMAT RULES:
 • Bold important information with **text**
 • Never write long paragraphs
 • Structure information clearly
+• Remember previous messages in this conversation
 
 You help users with:
-• Finding books and recommendations
+• Finding books FROM OUR DATABASE ONLY
 • Checking book availability
 • Understanding library policies
 • Answering questions about fines and borrowing
 • Providing library statistics"""
     
+    # Build messages with chat history
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Add conversation history if provided
+    if chat_history:
+        messages.extend(chat_history)
+    
+    # Add current user message
+    messages.append({"role": "user", "content": user_message})
+    
     data = {
         "model": "llama-3.1-8b-instant",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message}
-        ],
+        "messages": messages,
         "max_tokens": 500,
         "temperature": 0.7
     }
@@ -250,8 +266,12 @@ def get_library_context():
         active_borrows = Borrow.query.filter_by(returned=False).count()
         overdue_count = Borrow.query.filter_by(overdue=True, returned=False).count()
         
-        # Get available books list (limit to 20)
-        available_book_list = Book.query.filter_by(available=True).limit(20).all()
+        # Get ALL books in database (important for accurate recommendations)
+        all_books = Book.query.all()
+        all_book_list = [f"• {b.title} by {b.author} (ID: {b.id}, {'Available' if b.available else 'Not Available'})" for b in all_books]
+        
+        # Get available books list
+        available_book_list = Book.query.filter_by(available=True).all()
         available_titles = [f"• {b.title} by {b.author}" for b in available_book_list]
         
         # Get popular books
@@ -260,31 +280,72 @@ def get_library_context():
         ).join(Borrow).group_by(Book.id).order_by(desc('count')).limit(5).all()
         popular_list = [f"• {b.title} by {b.author} ({b.count} borrows)" for b in popular_books]
         
-        # Get overdue books info
-        overdue_borrows = Borrow.query.filter_by(overdue=True, returned=False).limit(10).all()
-        overdue_list = [f"• {b.book.title} - borrowed by Reader ID {b.borrower_id}" for b in overdue_borrows if b.book]
+        # Get top rated books
+        top_rated = db.session.query(
+            Book.title, Book.author, func.avg(Rating.rating).label('avg_rating')
+        ).join(Rating).group_by(Book.id).order_by(desc('avg_rating')).limit(5).all()
+        rated_list = [f"• {b.title} by {b.author} ({b.avg_rating:.1f} stars)" for b in top_rated]
         
         context = f"""
 CURRENT STATISTICS:
-• Total books: {total_books}
-• Available books: {available_books}
-• Borrowed books: {total_books - available_books}
+• Total books in library: {total_books}
+• Available to borrow: {available_books}
+• Currently borrowed: {total_books - available_books}
 • Total readers: {total_readers}
 • Active borrows: {active_borrows}
 • Overdue books: {overdue_count}
 
-AVAILABLE BOOKS (sample):
+COMPLETE BOOK CATALOG (ONLY recommend from this list):
+{chr(10).join(all_book_list) if all_book_list else '• No books in database'}
+
+CURRENTLY AVAILABLE TO BORROW:
 {chr(10).join(available_titles) if available_titles else '• No books currently available'}
 
-POPULAR BOOKS:
+MOST POPULAR BOOKS:
 {chr(10).join(popular_list) if popular_list else '• No borrow data yet'}
 
-OVERDUE BOOKS:
-{chr(10).join(overdue_list) if overdue_list else '• No overdue books'}
+TOP RATED BOOKS:
+{chr(10).join(rated_list) if rated_list else '• No ratings yet'}
 """
         return context
     except Exception as e:
-        return "Database context unavailable." 
+        return "Database context unavailable."
+
+
+def get_reader_context(reader_id):
+    """Get reader-specific context for chatbot"""
+    try:
+        reader = Reader.query.get(reader_id)
+        if not reader:
+            return ""
+        
+        # Get reader's current borrows
+        current_borrows = Borrow.query.filter_by(borrower_id=reader_id, returned=False).all()
+        borrow_list = [f"• {b.book.title} (due: {b.return_date}, {'OVERDUE' if b.overdue else 'on time'})" for b in current_borrows if b.book]
+        
+        # Get reader's fines
+        fines = Borrow.query.filter(
+            Borrow.borrower_id == reader_id,
+            Borrow.fine_amount > 0,
+            Borrow.fine_paid == False
+        ).all()
+        total_fines = sum(f.fine_amount for f in fines)
+        
+        # Get reader's borrow history count
+        total_borrowed = Borrow.query.filter_by(borrower_id=reader_id).count()
+        
+        context = f"""
+YOUR ACCOUNT INFO (Reader: {reader.first_name} {reader.last_name}):
+• Total books you've borrowed: {total_borrowed}
+• Currently borrowing: {len(current_borrows)} book(s)
+• Outstanding fines: ${total_fines:.2f}
+
+YOUR CURRENT BORROWS:
+{chr(10).join(borrow_list) if borrow_list else '• No books currently borrowed'}
+"""
+        return context
+    except Exception as e:
+        return ""
 
 
 #Login choice page
@@ -302,7 +363,7 @@ def readerlogin():
             #check hash
             if verify_password_hash(reader.password_hash, form.password.data):
                 login_user(reader)
-                return redirect(url_for('readerbookview'))
+                return redirect(url_for('reader_dashboard'))
             else:
                 flash("WRONG PASSWORD TRY AGAIN") 
         else:
@@ -574,11 +635,144 @@ def borrowerdelete(id):
 @app.route('/myborrows')
 @login_required
 def myborrows():
-
-    print(current_user.superuser)
-    #reader = current_user.id
+    todays_date = date.today()
     myborrows = Borrow.query.filter(Borrow.borrower_id == current_user.id).all()
-    return render_template('myborrows.html', myborrows = myborrows, current_user = current_user.id)
+    
+    # Mark overdue and calculate fines
+    for borrow in myborrows:
+        if not borrow.returned and (todays_date - borrow.return_date).days > 0:
+            borrow.overdue = True
+            borrow.fine_amount = calculate_fine(borrow)
+    
+    db.session.commit()
+    return render_template('myborrows.html', myborrows=myborrows, current_user=current_user.id)
+
+
+# ============== READER DASHBOARD ==============
+
+@app.route('/reader/dashboard')
+@login_required
+def reader_dashboard():
+    """Analytics Dashboard for Readers"""
+    if current_user.superuser:
+        return redirect(url_for('dashboard'))
+    
+    reader = Reader.query.get(current_user.id)
+    todays_date = date.today()
+    
+    # Reader's borrow statistics
+    total_borrowed = Borrow.query.filter_by(borrower_id=current_user.id).count()
+    currently_borrowed = Borrow.query.filter_by(borrower_id=current_user.id, returned=False).count()
+    returned_books = Borrow.query.filter_by(borrower_id=current_user.id, returned=True).count()
+    overdue_books = Borrow.query.filter_by(borrower_id=current_user.id, returned=False, overdue=True).count()
+    
+    # Update overdue status and calculate fines
+    my_borrows = Borrow.query.filter_by(borrower_id=current_user.id, returned=False).all()
+    for borrow in my_borrows:
+        if (todays_date - borrow.return_date).days > 0:
+            borrow.overdue = True
+            borrow.fine_amount = calculate_fine(borrow)
+    db.session.commit()
+    
+    # Total fines owed
+    total_fines = sum(b.fine_amount for b in my_borrows if not b.fine_paid and b.fine_amount > 0)
+    
+    # Reader's reviews count
+    my_reviews_count = Rating.query.filter_by(reader_id=current_user.id).count()
+    
+    # Books reader has reviewed
+    my_reviewed_books = Rating.query.filter_by(reader_id=current_user.id).order_by(desc(Rating.date_posted)).limit(5).all()
+    
+    # Reader's borrow history (recent)
+    recent_borrows = Borrow.query.filter_by(borrower_id=current_user.id).order_by(desc(Borrow.borrow_date)).limit(5).all()
+    
+    # Top rated books in library (for recommendations)
+    top_rated = db.session.query(
+        Book.id, Book.title, Book.author,
+        func.avg(Rating.rating).label('avg_rating'),
+        func.count(Rating.id).label('review_count')
+    ).join(Rating).group_by(Book.id).order_by(
+        desc('avg_rating')
+    ).limit(5).all()
+    
+    # Available books for borrowing
+    available_books = Book.query.filter_by(available=True).limit(10).all()
+    
+    # Suggestions status
+    my_suggestions = Suggestion.query.filter_by(reader_id=current_user.id).all()
+    pending_suggestions = sum(1 for s in my_suggestions if s.status == 'pending')
+    approved_suggestions = sum(1 for s in my_suggestions if s.status == 'approved')
+    
+    return render_template('reader_dashboard.html',
+        reader=reader,
+        total_borrowed=total_borrowed,
+        currently_borrowed=currently_borrowed,
+        returned_books=returned_books,
+        overdue_books=overdue_books,
+        total_fines=total_fines,
+        my_reviews_count=my_reviews_count,
+        my_reviewed_books=my_reviewed_books,
+        recent_borrows=recent_borrows,
+        top_rated=top_rated,
+        available_books=available_books,
+        pending_suggestions=pending_suggestions,
+        approved_suggestions=approved_suggestions
+    )
+
+
+# ============== READER BOOK REVIEWS ==============
+
+@app.route('/reader/reviews')
+@login_required
+def reader_all_reviews():
+    """View all book reviews (Reader view)"""
+    if current_user.superuser:
+        return redirect(url_for('all_reviews'))
+    
+    # Get all reviews with book info
+    reviews = db.session.query(Rating, Book).join(Book).order_by(desc(Rating.date_posted)).all()
+    
+    # Get books reader has borrowed (can review)
+    borrowed_book_ids = [b.book_id for b in Borrow.query.filter_by(borrower_id=current_user.id).all()]
+    
+    return render_template('reader_reviews.html', reviews=reviews, borrowed_book_ids=borrowed_book_ids)
+
+
+@app.route('/reader/my-reviews')
+@login_required
+def my_reviews():
+    """View reader's own reviews"""
+    if current_user.superuser:
+        return redirect(url_for('all_reviews'))
+    
+    reviews = Rating.query.filter_by(reader_id=current_user.id).order_by(desc(Rating.date_posted)).all()
+    return render_template('my_reviews.html', reviews=reviews)
+
+
+@app.route('/reader/book/<int:id>/reviews')
+@login_required
+def reader_book_reviews(id):
+    """View all reviews for a specific book (Reader view)"""
+    if current_user.superuser:
+        return redirect(url_for('book_reviews', id=id))
+    
+    book = Book.query.get_or_404(id)
+    reviews = Rating.query.filter_by(book_id=id).order_by(desc(Rating.date_posted)).all()
+    avg_rating = get_book_average_rating(id)
+    
+    # Check if reader has borrowed this book (can review)
+    has_borrowed = Borrow.query.filter_by(borrower_id=current_user.id, book_id=id).first() is not None
+    
+    # Check if reader has already reviewed
+    existing_review = Rating.query.filter_by(book_id=id, reader_id=current_user.id).first()
+    
+    return render_template('reader_book_reviews.html', 
+        book=book, 
+        reviews=reviews, 
+        avg_rating=avg_rating,
+        has_borrowed=has_borrowed,
+        existing_review=existing_review
+    )
 
 
 #Borrows
@@ -670,9 +864,10 @@ def borrowview():
     todays_date = date.today()
     borrows = Borrow.query.order_by(Borrow.id)
     for borrow in borrows:
-        if (todays_date - borrow.return_date).days > 1:
+        if not borrow.returned and (todays_date - borrow.return_date).days > 0:
             borrow.overdue = True
-
+    
+    db.session.commit()
     return render_template('borrowview.html', borrows = borrows, todays_date=todays_date)
 
 @app.route('/borrowhistory')
@@ -680,9 +875,10 @@ def borrowhistory():
     todays_date = date.today()
     borrows = Borrow.query.order_by(Borrow.id)
     for borrow in borrows:
-        if (todays_date - borrow.return_date).days > 1:
+        if not borrow.returned and (todays_date - borrow.return_date).days > 0:
             borrow.overdue = True
-
+    
+    db.session.commit()
     return render_template('allborrows.html', borrows = borrows, todays_date=todays_date)
 
 
@@ -702,6 +898,25 @@ def internal_server_error(e):
 @login_required
 def dashboard():
     """Analytics Dashboard for Librarians"""
+    todays_date = date.today()
+    
+    # First update overdue status and calculate all fines
+    all_active_borrows = Borrow.query.filter_by(returned=False).all()
+    for borrow in all_active_borrows:
+        if (todays_date - borrow.return_date).days > 0:
+            borrow.overdue = True
+            borrow.fine_amount = calculate_fine(borrow)
+    
+    # Update each reader's total fines
+    readers_with_fines = Reader.query.all()
+    for reader in readers_with_fines:
+        reader.total_fines_owed = sum(
+            b.fine_amount for b in reader.borrow 
+            if not b.fine_paid and b.fine_amount > 0
+        )
+    
+    db.session.commit()
+    
     # Basic Statistics
     total_books = Book.query.count()
     available_books = Book.query.filter_by(available=True).count()
@@ -779,16 +994,25 @@ def dashboard():
 @login_required
 def view_fines():
     """View all fines (Librarian view)"""
-    # Update all fines first
-    borrows = Borrow.query.filter_by(returned=False, overdue=True).all()
-    for borrow in borrows:
-        borrow.fine_amount = calculate_fine(borrow)
-        # Update reader's total fines
-        if borrow.borrower:
-            borrow.borrower.total_fines_owed = sum(
-                b.fine_amount for b in borrow.borrower.borrow 
-                if not b.fine_paid and b.fine_amount > 0
-            )
+    todays_date = date.today()
+    
+    # First mark all overdue books
+    all_borrows = Borrow.query.filter_by(returned=False).all()
+    for borrow in all_borrows:
+        if (todays_date - borrow.return_date).days > 0:
+            borrow.overdue = True
+    
+    # Then calculate fines for overdue books
+    for borrow in all_borrows:
+        if borrow.overdue:
+            borrow.fine_amount = calculate_fine(borrow)
+            # Update reader's total fines
+            if borrow.borrower:
+                borrow.borrower.total_fines_owed = sum(
+                    b.fine_amount for b in borrow.borrower.borrow 
+                    if not b.fine_paid and b.fine_amount > 0
+                )
+    
     db.session.commit()
     
     # Get all borrows with fines
@@ -877,11 +1101,17 @@ def rate_book(id):
 
 
 @app.route('/book/<int:id>/reviews')
+@login_required
 def book_reviews(id):
     """View all reviews for a book"""
     book = Book.query.get_or_404(id)
     reviews = Rating.query.filter_by(book_id=id).order_by(desc(Rating.date_posted)).all()
     avg_rating = get_book_average_rating(id)
+    
+    # Use librarian template if user is librarian
+    if current_user.superuser:
+        return render_template('librarian_book_reviews.html', book=book, reviews=reviews, avg_rating=avg_rating)
+    
     return render_template('book_reviews.html', book=book, reviews=reviews, avg_rating=avg_rating)
 
 
@@ -981,8 +1211,25 @@ def chatbot_send():
     if not user_message:
         return jsonify({'response': 'Please enter a message.'})
     
-    # Get response from Groq API
-    bot_response = get_chatbot_response(user_message)
+    # Initialize or get chat history from session
+    if 'librarian_chat_history' not in session:
+        session['librarian_chat_history'] = []
+    
+    chat_history = session['librarian_chat_history']
+    
+    # Get response from Groq API with chat history
+    bot_response = get_chatbot_response(user_message, chat_history=chat_history)
+    
+    # Update chat history (keep last 10 exchanges to avoid token limits)
+    chat_history.append({"role": "user", "content": user_message})
+    chat_history.append({"role": "assistant", "content": bot_response})
+    
+    # Keep only last 10 exchanges (20 messages)
+    if len(chat_history) > 20:
+        chat_history = chat_history[-20:]
+    
+    session['librarian_chat_history'] = chat_history
+    session.modified = True
     
     return jsonify({'response': bot_response})
 
@@ -1010,10 +1257,54 @@ def reader_chatbot_send():
     if not user_message:
         return jsonify({'response': 'Please enter a message.'})
     
-    # Get response from Groq API
-    bot_response = get_chatbot_response(user_message)
+    # Initialize or get chat history from session
+    if 'reader_chat_history' not in session:
+        session['reader_chat_history'] = []
+    
+    chat_history = session['reader_chat_history']
+    
+    # Get reader-specific context
+    reader_context = get_reader_context(current_user.id)
+    
+    # Get response from Groq API with chat history and reader context
+    bot_response = get_chatbot_response(user_message, chat_history=chat_history, reader_context=reader_context)
+    
+    # Update chat history (keep last 10 exchanges to avoid token limits)
+    chat_history.append({"role": "user", "content": user_message})
+    chat_history.append({"role": "assistant", "content": bot_response})
+    
+    # Keep only last 10 exchanges (20 messages)
+    if len(chat_history) > 20:
+        chat_history = chat_history[-20:]
+    
+    session['reader_chat_history'] = chat_history
+    session.modified = True
     
     return jsonify({'response': bot_response})
+
+
+@app.route('/chatbot/clear', methods=['POST'])
+@login_required
+def chatbot_clear():
+    """Clear librarian chat history"""
+    if not current_user.superuser:
+        return jsonify({'error': 'Access denied.'}), 403
+    
+    session['librarian_chat_history'] = []
+    session.modified = True
+    return jsonify({'success': True})
+
+
+@app.route('/reader/chatbot/clear', methods=['POST'])
+@login_required
+def reader_chatbot_clear():
+    """Clear reader chat history"""
+    if current_user.superuser:
+        return jsonify({'error': 'Access denied.'}), 403
+    
+    session['reader_chat_history'] = []
+    session.modified = True
+    return jsonify({'success': True})
 
 
 

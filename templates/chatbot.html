@@ -12,9 +12,21 @@
           >
         </div>
       </div>
-      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back
-      </a>
+      <div>
+        <button
+          onclick="clearChat()"
+          class="btn btn-outline-light btn-sm me-2"
+          title="Clear conversation"
+        >
+          <i class="fas fa-broom me-1"></i> Clear
+        </button>
+        <a
+          href="{{ url_for('dashboard') }}"
+          class="btn btn-outline-light btn-sm"
+        >
+          <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+      </div>
     </div>
 
     <!-- Chat Messages Container -->
@@ -478,6 +490,52 @@
 
   function sendQuickMessage(message) {
     sendMessage(message);
+  }
+
+  // Clear chat history
+  async function clearChat() {
+    if (!confirm("Clear chat history and start a new conversation?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/chatbot/clear", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        // Clear chat UI
+        const container = document.getElementById("chat-container");
+        container.innerHTML = `
+          <div class="chat-message bot-message">
+            <div class="message-avatar">
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+              <div class="message-bubble bot">
+                <strong>Hello! I'm your Library Assistant.</strong>
+                <br /><br />
+                I have access to the library database and can help you with:
+                <ul>
+                  <li>📚 Check book availability</li>
+                  <li>🔍 Find books by title or author</li>
+                  <li>📊 View library statistics</li>
+                  <li>💰 Explain fine policies</li>
+                  <li>📖 Book recommendations</li>
+                </ul>
+                What would you like to know?
+              </div>
+              <span class="message-time">Just now</span>
+            </div>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error("Error clearing chat:", error);
+    }
   }
 
   chatForm.addEventListener("submit", function (e) {
